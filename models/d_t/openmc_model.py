@@ -1,9 +1,10 @@
 # %%
 import openmc
 import numpy as np
-import component_nodes as cn
+# import component_nodes as cn
 import tokamak_radiation_environment as tre
 from fusion_fuel_concepts_explorer.sources import neutron_source
+from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
 
 # %%
 # define materials
@@ -357,4 +358,4 @@ tallies.append(spectra_tf_coil_case_tally)
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)
 
-model.run(threads=12, geometry_debug=True)
+model.run(threads=12, geometry_debug=False)
