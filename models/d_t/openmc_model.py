@@ -225,34 +225,113 @@ localmesh_filter = openmc.MeshFilter(mesh)
 tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
 energy_filter = openmc.EnergyFilter(tripoli315)
 
-# # tallies
-# # mesh tally - nflux
-# tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-# tally1.filters = [neutron_filter, globalmesh_filter]
-# tally1.scores = ["flux"]
+# mesh filter
+# regular mesh
+mesh = openmc.RegularMesh()
+mesh.dimension = [128, 48, 200]
+mesh.lower_left = [40, -120, -500]
+mesh.upper_right = [680, 120, 500]
+globalmesh_filter = openmc.MeshFilter(mesh)
 
-# # mesh tally - heating
-# tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
-# tally2.filters = [particle_filter, globalmesh_filter]
-# tally2.scores = ["heating"]
+# local mesh
+mesh = openmc.RegularMesh()
+mesh.dimension = [1, 1, 1]
+mesh.lower_left = [100, -8, -20]
+mesh.upper_right = [107, 8, 20]
+localmesh_filter = openmc.MeshFilter(mesh)
+
+# cell filter
+tf_coil_magnet_filter = openmc.CellFilter(tf_coil_magnet)
+tf_coil_insulation_filter = openmc.CellFilter(tf_coil_insulation)
+tf_coil_case_filter = openmc.CellFilter(tf_coil_case)
+
+# energyfilter
+tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
+energy_filter = openmc.EnergyFilter(tripoli315)
+
+# tallies
+tallies = openmc.Tallies()
+# mesh tally - nflux
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [neutron_filter, globalmesh_filter]
+tally1.scores = ["flux"]
+tallies.append(tally1)
+
+# mesh tally - heating
+tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
+tally2.filters = [particle_filter, globalmesh_filter]
+tally2.scores = ["heating"]
+tallies.append(tally2)
 
 # mesh tally - gas production
 tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
 tally3.filters = [localmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
+tallies.append(tally3)
 
 # mesh tally - flux
 tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
 tally4.filters = [neutron_filter, localmesh_filter, energy_filter]
 tally4.scores = ["flux"]
+tallies.append(tally4)
 
-tallies = openmc.Tallies([tally3, tally4])
+# tbr
+tbr_total_tally = openmc.Tally(name="TBR_total")
+tbr_total_tally.scores = ["(n,Xt)"]
+tallies.append(tbr_total_tally)
 
+# qvol
+q_vol_tf_coil_magnet_tally = openmc.Tally(name="q_vol_tf_coil_magnet")
+q_vol_tf_coil_magnet_tally.scores = ["heating"]
+q_vol_tf_coil_magnet_tally.filters = [tf_coil_magnet_filter]
+tallies.append(q_vol_tf_coil_magnet_tally)
+
+q_vol_tf_coil_insulation_tally = openmc.Tally(name="q_vol_tf_coil_insulation")
+q_vol_tf_coil_insulation_tally.scores = ["heating"]
+q_vol_tf_coil_insulation_tally.filters = [tf_coil_insulation_filter]
+tallies.append(q_vol_tf_coil_insulation_tally)
+
+q_vol_tf_coil_case_tally = openmc.Tally(name="q_vol_tf_coil_case")
+q_vol_tf_coil_case_tally.scores = ["heating"]
+q_vol_tf_coil_case_tally.filters = [tf_coil_case_filter]
+tallies.append(q_vol_tf_coil_case_tally)
+
+# DPA
+damage_tf_coil_magnet_tally = openmc.Tally(name="dpa_tf_coil_magnet")
+damage_tf_coil_magnet_tally.scores = ["damage-energy"]
+damage_tf_coil_magnet_tally.filters = [tf_coil_magnet_filter]
+tallies.append(damage_tf_coil_magnet_tally)
+
+damage_tf_coil_insulation_tally = openmc.Tally(name="dpa_tf_coil_insulation")
+damage_tf_coil_insulation_tally.scores = ["damage-energy"]
+damage_tf_coil_insulation_tally.filters = [tf_coil_insulation_filter]
+tallies.append(damage_tf_coil_insulation_tally)
+
+damage_tf_coil_case_tally = openmc.Tally(name="dpa_tf_coil_case")
+damage_tf_coil_case_tally.scores = ["damage-energy"]
+damage_tf_coil_case_tally.filters = [tf_coil_case_filter]
+tallies.append(damage_tf_coil_case_tally)
+
+# NEUTRON SPECTRA
+spectra_tf_coil_magnet_tally = openmc.Tally(name='neutron_spectra_tf_coil_magnet')
+spectra_tf_coil_magnet_tally.filters = [tf_coil_magnet_filter, neutron_filter, energy_filter]
+spectra_tf_coil_magnet_tally.scores = ['flux']
+tallies.append(spectra_tf_coil_magnet_tally)
+
+spectra_tf_coil_insulation_tally = openmc.Tally(name='neutron_spectra_tf_coil_insulation')
+spectra_tf_coil_insulation_tally.filters = [tf_coil_insulation_filter, neutron_filter, energy_filter]
+spectra_tf_coil_insulation_tally.scores = ['flux']
+tallies.append(spectra_tf_coil_insulation_tally)
+
+spectra_tf_coil_case_tally = openmc.Tally(name='neutron_spectra_tf_coil_case')
+spectra_tf_coil_case_tally.filters = [tf_coil_case_filter, neutron_filter, energy_filter]
+spectra_tf_coil_case_tally.scores = ['flux']
+tallies.append(spectra_tf_coil_case_tally)
 
 # %%
 
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)
 
-model.run(threads=8, geometry_debug=True)
+model.run(threads=12, geometry_debug=True)
