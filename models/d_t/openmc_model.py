@@ -1,7 +1,6 @@
 # %%
 import openmc
 import numpy as np
-# import component_nodes as cn
 import tokamak_radiation_environment as tre
 from fusion_fuel_concepts_explorer.sources import neutron_source
 from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
