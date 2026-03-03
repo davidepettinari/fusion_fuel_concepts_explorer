@@ -219,7 +219,7 @@ source.energy = openmc.stats.Tabular(energies, weights, interpolation="histogram
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
-settings.photon_transport = False
+settings.photon_transport = True
 # settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
