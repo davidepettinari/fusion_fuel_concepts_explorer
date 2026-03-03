@@ -139,15 +139,15 @@ def calculate_neutron_emission_probabilities(
         tau_particle_s: Optional particle confinement time [s] used to balance bred T/He3 against
             burn-up and losses. If None, losses are ignored (infinite confinement).
         reactivity_tt: Optional callable returning <σv>_TT [cm^3/s] for a temperature array.
-            If omitted, uses NRL table fit (TT column). Includes T+T neutron production (11.3 MeV).
+            If omitted, uses NRL table fit (TT column). Includes T+T neutron production (3.77 MeV).
         reactivity_the3: Optional callable returning <σv>_{THe3} [cm^3/s] for a temperature array.
-            If omitted, uses NRL table fit (T–He3 column). Includes T+He3 neutron production (12.1 MeV).
+            If omitted, uses NRL table fit (T–He3 column). Includes T+He3 neutron production (4.03 MeV).
 
     Returns:
         NeutronEmissionResult with:
             - probabilities: neutron emission probability per energy (keys:
-              ``"2.45 MeV (DDn)"``, ``"14.1 MeV (DTn)"``, ``"11.3 MeV (TTn)"``,
-              ``"~12.1 MeV (THe3 n)"``).
+              ``"2.45 MeV (DDn)"``, ``"14.1 MeV (DTn)"``, ``"3.77 MeV (TTn)"``,
+              ``"4.03 MeV (THe3 n)"``).
             - reaction_rates_s: total neutron production rate [1/s] per channel.
             - total_neutron_rate_s: total neutron production rate [1/s].
 
@@ -155,8 +155,8 @@ def calculate_neutron_emission_probabilities(
         Neutron-producing channels considered:
             - D(d,n)^3He at ~2.45 MeV.
             - D(t,n)^4He at ~14.1 MeV.
-            - T(t,2n)^4He at ~11.3 MeV (using NRL table fit by default).
-            - T(He3,n)^alpha+p at ~12.1 MeV (using NRL table fit by default).
+            - T(t,2n)^4He at ~3.77 MeV (using NRL table fit by default).
+            - T(He3,n)^alpha+p at ~4.03 MeV (using NRL table fit by default).
     """
     if not absolute_densities and total_ion_density_cm3 is None:
         raise ValueError("total_ion_density_cm3 is required when using fractional composition.")
@@ -231,7 +231,7 @@ def calculate_neutron_emission_probabilities(
 
     dt_neutrons = float(np.sum(dt_rate * volume_profile))
     dd_neutrons = float(np.sum(ddn_rate * volume_profile))
-    tt_neutrons = float(np.sum(tt_rate * volume_profile))
+    tt_neutrons = float(np.sum(2 * tt_rate * volume_profile)) # each TT reaction produces 2 neutrons
     the3_neutrons = float(np.sum(the3_rate * volume_profile))
 
     total_neutrons = dt_neutrons + dd_neutrons + tt_neutrons + the3_neutrons
@@ -239,15 +239,15 @@ def calculate_neutron_emission_probabilities(
         probabilities = {
             "2.45 MeV (DDn)": 0.0,
             "14.1 MeV (DTn)": 0.0,
-            "11.3 MeV (TTn)": 0.0,
-            "12.1 MeV (THe3 n)": 0.0,
+            "3.77 MeV (TTn)": 0.0,
+            "4.03 MeV (THe3 n)": 0.0,
         }
     else:
         probabilities = {
             "2.45 MeV (DDn)": dd_neutrons / total_neutrons,
             "14.1 MeV (DTn)": dt_neutrons / total_neutrons,
-            "11.3 MeV (TTn)": tt_neutrons / total_neutrons,
-            "12.1 MeV (THe3 n)": the3_neutrons / total_neutrons,
+            "3.77 MeV (TTn)": tt_neutrons / total_neutrons,
+            "4.03 MeV (THe3 n)": the3_neutrons / total_neutrons,
         }
 
     reaction_rates = {
