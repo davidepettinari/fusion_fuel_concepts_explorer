@@ -3,24 +3,39 @@ import openmc
 import numpy as np
 import component_nodes as cn
 import tokamak_radiation_environment as tre
+from fusion_fuel_concepts_explorer.sources import neutron_source
+
 # %%
 # define materials
 
 dt_plasma = tre.materials.dt_plasma
 tungsten = tre.materials.tungsten
 beryllium = tre.materials.beryllium
-eurofer = tre.materials.eurofer97
+# eurofer = tre.materials.eurofer97
 flibe = tre.materials.flibe
 ss304 = tre.materials.ss304
 ss316L = tre.materials.ss316L
 b4c = tre.materials.b4c
 wc = tre.materials.wc
 
+inconel = openmc.Material(name='Inconel 718')
+inconel.add_element('Al', 0.52e-2, 'wo')
+inconel.add_element('C', 0.021e-2, 'wo')
+inconel.add_element('Co', 0.11e-2, 'wo')
+inconel.add_element('Cr', 19.06e-2, 'wo')
+inconel.add_element('Cu', 0.02e-2, 'wo')
+inconel.add_element('Fe', 18.15e-2, 'wo')
+inconel.add_element('Mo', 3.04e-2, 'wo')
+inconel.add_element('Ti', 0.93e-2, 'wo')
+inconel.add_element('Nb', 5.08e-2, 'wo')
+inconel.add_element('Ni', 53.0e-2, 'wo')
+inconel.set_density('g/cm3', 8.19)
+
 windingpack = tre.materials.windingpack
 fiberglass = tre.materials.fiberglass
 
 materials = openmc.Materials(
-    [dt_plasma, tungsten, beryllium, flibe, wc, eurofer, ss304, windingpack, fiberglass, ss316L])
+    [dt_plasma, tungsten, beryllium, flibe, wc, inconel, ss304, windingpack, fiberglass, ss316L])
 
 # %%
 
@@ -35,10 +50,10 @@ angle = (-10, 10)
 plasma, sol, first_wall, vessel_inner_structure, vessel_cooling_channel, vessel_neutron_multiplier, vessel_outer_structure, blanket, shield = tre.components.core_group(
     plasma_outer_nodes=cn.plasma_out, plasma_material=dt_plasma,
     firstwall_inner_nodes=cn.fw_in, firstwall_thickness=.5, firstwall_material=tungsten,
-    vv_stri_thickness=2., vv_stri_material=eurofer,
+    vv_stri_thickness=2., vv_stri_material=inconel,
     vv_channel_thickness=2., vv_channel_material=flibe,
     vv_multiplier_thickness=1., vv_multiplier_material=beryllium,
-    vv_stro_thickness=2., vv_stro_material=eurofer,
+    vv_stro_thickness=2., vv_stro_material=inconel,
     blanket_thickness=60., blanket_material=flibe,
     shield_thickness=2., shield_material=ss304,
     angle=angle)
@@ -176,7 +191,7 @@ geometry.merge_surfaces = True
 ww = openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
 
 # source definition
-source = openmc.Source()
+source = openmc.IndependentSource()
 source.particle = 'neutron'
 radius = openmc.stats.Discrete([330], [1])
 z_values = openmc.stats.Discrete([0], [1])
@@ -184,7 +199,23 @@ angle = openmc.stats.Uniform(a=np.radians(-10), b=np.radians(10))
 source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
-source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
+# source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
+calculate_neutron_emission_probabilities = neutron_source.calculate_neutron_emission_probabilities
+res_avg = calculate_neutron_emission_probabilities(
+    {"D": 0.5, "T": 0.5},
+    ion_temperature_keV=14.0,
+    total_ion_density_cm3=1e14,
+    volume_profile_cm3=1.5e6,
+    reactivity_model="bosch_hale",
+    include_secondary_equilibrium=True
+)
+prob_dict = res_avg.probabilities
+energies = np.array([
+    float(key.split(" MeV")[0])
+    for key in prob_dict.keys()
+])
+weights = np.array(list(prob_dict.values()))
+source.energy = openmc.stats.Tabular(energies, weights, interpolation="histogram")
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
@@ -205,14 +236,6 @@ particle_filter = openmc.ParticleFilter(
     ['neutron', 'photon', 'electron', 'positron'])
 
 neutron_filter = openmc.ParticleFilter(['neutron'])
-
-# # mesh
-# # regular mesh
-# mesh = openmc.RegularMesh()
-# mesh.dimension = [128, 48, 200]
-# mesh.lower_left = [40, -120, -500]
-# mesh.upper_right = [680, 120, 500]
-# globalmesh_filter = openmc.MeshFilter(mesh)
 
 # local mesh
 mesh = openmc.RegularMesh()
