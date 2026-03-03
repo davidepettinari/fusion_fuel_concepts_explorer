@@ -241,9 +241,9 @@ mesh.upper_right = [107, 8, 20]
 localmesh_filter = openmc.MeshFilter(mesh)
 
 # cell filter
-tf_coil_magnet_filter = openmc.CellFilter(tf_coil_magnet)
-tf_coil_insulation_filter = openmc.CellFilter(tf_coil_insulation)
-tf_coil_case_filter = openmc.CellFilter(tf_coil_case)
+tf_coil_magnet_filter = openmc.CellFilter(root[45])
+tf_coil_insulation_filter = openmc.CellFilter(root[46])
+tf_coil_case_filter = openmc.CellFilter(root[47])
 
 # energyfilter
 tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
