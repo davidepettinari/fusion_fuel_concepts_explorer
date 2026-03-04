@@ -1,6 +1,7 @@
 # %%
 import openmc
 import numpy as np
+from pathlib import Path
 import tokamak_radiation_environment as tre
 from fusion_fuel_concepts_explorer.sources import neutron_source
 from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
@@ -37,6 +38,22 @@ fiberglass = tre.materials.fiberglass
 materials = openmc.Materials(
     [dt_plasma, tungsten, beryllium, flibe, wc, inconel, ss304, windingpack, fiberglass, ss316L])
 
+# import cross section data if necessary
+import openmc_data_downloader as odd
+
+cross_sections_dir = (
+    Path(__file__).resolve().parents[2]
+    / "src"
+    / "fusion_fuel_concepts_explorer"
+    / "materials"
+    / "cross_sections"
+)
+materials.download_cross_section_data(
+    libraries=["ENDFB-8.0-NNDC"],
+    destination=cross_sections_dir,
+    set_OPENMC_CROSS_SECTIONS=True,
+    particles=["neutron", "photon"],
+)
 # %%
 
 # geometry
