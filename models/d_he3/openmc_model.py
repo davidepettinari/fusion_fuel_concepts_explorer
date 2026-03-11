@@ -1,4 +1,3 @@
-# %%
 import openmc
 import numpy as np
 from pathlib import Path
@@ -6,18 +5,15 @@ import tokamak_radiation_environment as tre
 from fusion_fuel_concepts_explorer.sources import neutron_source
 from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
 
-# %%
 # define materials
+dt_plasma = openmc.Material(name='dt_plasma')
+dt_plasma.add_nuclide('H2', 1.0)
+dt_plasma.add_nuclide('He3', 1.0)
+dt_plasma.set_density('g/cm3', 1e-5)
 
-dt_plasma = tre.materials.dt_plasma  # NOTE: a new plasma type "dhe3" should be defined, but the difference would be minimal
-tungsten = tre.materials.tungsten
-beryllium = tre.materials.beryllium
-# eurofer = tre.materials.eurofer97
-flibe = tre.materials.flibe
-ss304 = tre.materials.ss304
-ss316L = tre.materials.ss316L
-b4c = tre.materials.b4c
-wc = tre.materials.wc
+tungsten = openmc.Material(name='tungsten')
+tungsten.add_element('W', 1.0)
+tungsten.set_density('g/cm3', 19.3)
 
 inconel = openmc.Material(name='Inconel 718')
 inconel.add_element('Al', 0.52e-2, 'wo')
@@ -31,6 +27,14 @@ inconel.add_element('Ti', 0.93e-2, 'wo')
 inconel.add_element('Nb', 5.08e-2, 'wo')
 inconel.add_element('Ni', 53.0e-2, 'wo')
 inconel.set_density('g/cm3', 8.19)
+
+beryllium = tre.materials.beryllium
+# eurofer = tre.materials.eurofer97
+flibe = tre.materials.flibe
+ss304 = tre.materials.ss304
+ss316L = tre.materials.ss316L
+b4c = tre.materials.b4c
+wc = tre.materials.wc
 
 windingpack = tre.materials.windingpack
 fiberglass = tre.materials.fiberglass
@@ -228,7 +232,7 @@ res_avg = calculate_neutron_emission_probabilities(
 )
 prob_dict = res_avg.probabilities
 energies = np.array([
-    float(key.split(" MeV")[0])
+    float(key.split(" MeV")[0]) * 1e6
     for key in prob_dict.keys()
 ])
 weights = np.array(list(prob_dict.values()))
@@ -254,12 +258,12 @@ particle_filter = openmc.ParticleFilter(
 
 neutron_filter = openmc.ParticleFilter(['neutron'])
 
-# local mesh
-mesh = openmc.RegularMesh()
-mesh.dimension = [1, 1, 1]
-mesh.lower_left = [100, -8, -20]
-mesh.upper_right = [107, 8, 20]
-localmesh_filter = openmc.MeshFilter(mesh)
+# # local mesh
+# mesh = openmc.RegularMesh()
+# mesh.dimension = [1, 1, 1]
+# mesh.lower_left = [100, -8, -20]
+# mesh.upper_right = [107, 8, 20]
+# localmesh_filter = openmc.MeshFilter(mesh)
 
 # energyfilter
 tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
@@ -273,14 +277,9 @@ mesh.lower_left = [40, -120, -500]
 mesh.upper_right = [680, 120, 500]
 globalmesh_filter = openmc.MeshFilter(mesh)
 
-# local mesh
-mesh = openmc.RegularMesh()
-mesh.dimension = [1, 1, 1]
-mesh.lower_left = [100, -8, -20]
-mesh.upper_right = [107, 8, 20]
-localmesh_filter = openmc.MeshFilter(mesh)
-
 # cell filter
+channel_filter = openmc.CellFilter(root[4])
+breeder_filter = openmc.CellFilter(root[7])
 tf_coil_magnet_filter = openmc.CellFilter(root[45])
 tf_coil_insulation_filter = openmc.CellFilter(root[46])
 tf_coil_case_filter = openmc.CellFilter(root[47])
@@ -305,23 +304,32 @@ tallies.append(tally2)
 
 # mesh tally - gas production
 tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-tally3.filters = [localmesh_filter]
+tally3.filters = [globalmesh_filter]
 tally3.scores = ["H1-production", "H2-production", "H3-production",
                  "He3-production", "He4-production"]
 tallies.append(tally3)
-
-# mesh tally - flux
-tally4 = openmc.Tally(tally_id=4, name="flux_mesh_spectrum")
-tally4.filters = [neutron_filter, localmesh_filter, energy_filter]
-tally4.scores = ["flux"]
-tallies.append(tally4)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
 tbr_total_tally.scores = ["(n,Xt)"]
 tallies.append(tbr_total_tally)
 
+tbr_channel_tally = openmc.Tally(name="TBR_channel")
+tbr_channel_tally.scores = ["(n,Xt)"]
+tbr_channel_tally.filters = [channel_filter]
+tallies.append(tbr_channel_tally)
+
+tbr_breeder_tally = openmc.Tally(name="TBR_breeder")
+tbr_breeder_tally.scores = ["(n,Xt)"]
+tbr_breeder_tally.filters = [breeder_filter]
+tallies.append(tbr_breeder_tally)
+
 # qvol
+# Total power deposition
+heating_full_tally = openmc.Tally(name="heating_full")
+heating_full_tally.scores = ["heating"]
+tallies.append(heating_full_tally)
+
 q_vol_tf_coil_magnet_tally = openmc.Tally(name="q_vol_tf_coil_magnet")
 q_vol_tf_coil_magnet_tally.scores = ["heating"]
 q_vol_tf_coil_magnet_tally.filters = [tf_coil_magnet_filter]
@@ -353,6 +361,25 @@ damage_tf_coil_case_tally.scores = ["damage-energy"]
 damage_tf_coil_case_tally.filters = [tf_coil_case_filter]
 tallies.append(damage_tf_coil_case_tally)
 
+dpa_ybco = openmc.Tally(name='dpa_ybco')
+dpa_ybco.scores = ['damage-energy']
+dpa_ybco.filters = [tf_coil_magnet_filter]
+dpa_ybco.nuclides = [
+    openmc.Nuclide("Y89"),
+    openmc.Nuclide("Ba130"),
+    openmc.Nuclide("Ba132"),
+    openmc.Nuclide("Ba134"),
+    openmc.Nuclide("Ba135"),
+    openmc.Nuclide("Ba136"),
+    openmc.Nuclide("Ba137"),
+    openmc.Nuclide("Ba138"),
+    openmc.Nuclide("Cu63"),
+    openmc.Nuclide("Cu65"),
+    openmc.Nuclide("O16"),
+    openmc.Nuclide("O17"),
+    openmc.Nuclide("O18"),
+]
+
 # NEUTRON SPECTRA
 spectra_tf_coil_magnet_tally = openmc.Tally(name='neutron_spectra_tf_coil_magnet')
 spectra_tf_coil_magnet_tally.filters = [tf_coil_magnet_filter, neutron_filter, energy_filter]
@@ -368,8 +395,6 @@ spectra_tf_coil_case_tally = openmc.Tally(name='neutron_spectra_tf_coil_case')
 spectra_tf_coil_case_tally.filters = [tf_coil_case_filter, neutron_filter, energy_filter]
 spectra_tf_coil_case_tally.scores = ['flux']
 tallies.append(spectra_tf_coil_case_tally)
-
-# %%
 
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)

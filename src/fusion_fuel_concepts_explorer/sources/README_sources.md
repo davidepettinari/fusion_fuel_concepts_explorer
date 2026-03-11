@@ -14,3 +14,6 @@ To obtain the probability of emitting a neutron with energy **X**, compute:
 $p_X = \frac{p_{n,X}}{\sum p_n}$
 
 That is, divide the neutrons/reaction for the neutron-producing channel that yields energy **X** by the total neutrons/reaction from all neutron-producing reactions.
+
+BE CAREFUL! The function does not automatically return energies and probabilities formatted for use in openmc.
+Information must be extracted from the dictionary and converted from MeV to eV!
