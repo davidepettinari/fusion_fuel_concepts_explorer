@@ -376,10 +376,10 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 # tallies
 tallies = openmc.Tallies()
 # mesh tally - nflux
-# tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-# tally1.filters = [neutron_filter, globalmesh_filter]
-# tally1.scores = ["flux"]
-# tallies.append(tally1)
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [neutron_filter, globalmesh_filter]
+tally1.scores = ["flux"]
+tallies.append(tally1)
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
@@ -388,11 +388,11 @@ tally2.scores = ["heating"]
 tallies.append(tally2)
 
 # mesh tally - gas production
-# tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-# tally3.filters = [globalmesh_filter]
-# tally3.scores = ["H1-production", "H2-production", "H3-production",
-#                  "He3-production", "He4-production"]
-# tallies.append(tally3)
+tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+tally3.filters = [globalmesh_filter]
+tally3.scores = ["H1-production", "H2-production", "H3-production",
+                 "He3-production", "He4-production"]
+tallies.append(tally3)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
