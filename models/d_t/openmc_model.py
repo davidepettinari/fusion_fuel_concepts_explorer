@@ -153,62 +153,17 @@ angle = (-10, 10)
 
 # components
 
-# Plasma
-plasma = tre.components.Plasma(
-    outer_nodes=cn.plasma_out, material=None, surf_offset=0.0, angle=angle
-)
-
-# Vessel
-
-first_wall = tre.components.FirstWall(
-    inner_nodes=cn.fw_in, thickness=0.5, material=tungsten, angle=angle
-)
-
-vessel_inner_structure = tre.components.VesselInnerStructure(
-    first_wall=first_wall, thickness=2.0, material=inconel, angle=angle
-)
-
-vessel_cooling_channel = tre.components.VesselCoolingChannel(
-    vessel_inner_structure=vessel_inner_structure,
-    thickness=2.0,
-    material=flibe,
-    angle=angle,
-)
-
-vessel_neutron_multiplier = tre.components.VesselNeutronMultiplier(
-    vessel_cooling_channel=vessel_cooling_channel,
-    thickness=1.0,
-    material=beryllium,
-    angle=angle,
-)
-
-vessel_outer_structure = tre.components.VesselOuterStructure(
-    vessel_neutron_multiplier=vessel_neutron_multiplier,
-    thickness=2.0,
-    material=inconel,
-    angle=angle,
-)
-
-# SOL vacuum
-
-sol = tre.components.SOLVacuum(
-    plasma=plasma, first_wall=first_wall, material=None, angle=angle
-)
-
-# Blanket
-
-blanket = tre.components.Blanket(
-    vacuum_vessel=vessel_outer_structure,
-    thickness=60,
-    material=flibe,
-    angle=angle,
-)
-
-# Shield
-
-shield = tre.components.Shield(
-    blanket=blanket, thickness=2, material=ss304, angle=angle
-)
+# core
+plasma, sol, first_wall, vessel_inner_structure, vessel_cooling_channel, vessel_neutron_multiplier, vessel_outer_structure, blanket, shield = tre.components.core_group(
+    plasma_outer_nodes=cn.plasma_out, plasma_material=None,
+    firstwall_inner_nodes=cn.fw_in, firstwall_thickness=0.5, firstwall_material=tungsten,
+    vv_stri_thickness=2., vv_stri_material=inconel,
+    vv_channel_thickness=2., vv_channel_material=flibe,
+    vv_multiplier_thickness=1., vv_multiplier_material=beryllium,
+    vv_stro_thickness=2., vv_stro_material=inconel,
+    blanket_thickness=60., blanket_material=flibe,
+    shield_thickness=2., shield_material=ss304,
+    angle=angle)
 
 reactor_components = [
     plasma,
@@ -384,7 +339,7 @@ settings.photon_transport = True
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e6)
+settings.particles = int(1e5)
 settings.statepoint = {'batches': [
     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
@@ -421,10 +376,10 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 # tallies
 tallies = openmc.Tallies()
 # mesh tally - nflux
-tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-tally1.filters = [neutron_filter, globalmesh_filter]
-tally1.scores = ["flux"]
-tallies.append(tally1)
+# tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+# tally1.filters = [neutron_filter, globalmesh_filter]
+# tally1.scores = ["flux"]
+# tallies.append(tally1)
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
@@ -433,11 +388,11 @@ tally2.scores = ["heating"]
 tallies.append(tally2)
 
 # mesh tally - gas production
-tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-tally3.filters = [globalmesh_filter]
-tally3.scores = ["H1-production", "H2-production", "H3-production",
-                 "He3-production", "He4-production"]
-tallies.append(tally3)
+# tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+# tally3.filters = [globalmesh_filter]
+# tally3.scores = ["H1-production", "H2-production", "H3-production",
+#                  "He3-production", "He4-production"]
+# tallies.append(tally3)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
@@ -509,6 +464,7 @@ dpa_ybco.nuclides = [
     openmc.Nuclide("O17"),
     openmc.Nuclide("O18"),
 ]
+tallies.append(dpa_ybco)
 
 # NEUTRON SPECTRA
 spectra_tf_coil_magnet_tally = openmc.Tally(name='neutron_spectra_tf_coil_magnet')
