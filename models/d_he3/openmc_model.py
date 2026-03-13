@@ -58,7 +58,6 @@ materials.download_cross_section_data(
     set_OPENMC_CROSS_SECTIONS=True,
     particles=["neutron", "photon"],
 )
-# %%
 
 # geometry
 
@@ -203,9 +202,6 @@ geometry = openmc.Geometry(root=root)
 
 geometry.merge_surfaces = True
 
-# %%
-
-# %%
 # settings
 
 # weight windows from attila4mc
@@ -245,25 +241,16 @@ settings.photon_transport = True
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e5)
+settings.particles = int(1e6)
 settings.statepoint = {'batches': [
     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
-
-# %%
 
 # filters
 particle_filter = openmc.ParticleFilter(
     ['neutron', 'photon', 'electron', 'positron'])
 
 neutron_filter = openmc.ParticleFilter(['neutron'])
-
-# # local mesh
-# mesh = openmc.RegularMesh()
-# mesh.dimension = [1, 1, 1]
-# mesh.lower_left = [100, -8, -20]
-# mesh.upper_right = [107, 8, 20]
-# localmesh_filter = openmc.MeshFilter(mesh)
 
 # energyfilter
 tripoli315 = openmc.mgxs.GROUP_STRUCTURES['TRIPOLI-315']
@@ -291,10 +278,10 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 # tallies
 tallies = openmc.Tallies()
 # mesh tally - nflux
-# tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-# tally1.filters = [neutron_filter, globalmesh_filter]
-# tally1.scores = ["flux"]
-# tallies.append(tally1)
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [neutron_filter, globalmesh_filter]
+tally1.scores = ["flux"]
+tallies.append(tally1)
 
 # mesh tally - heating
 tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
@@ -303,11 +290,11 @@ tally2.scores = ["heating"]
 tallies.append(tally2)
 
 # mesh tally - gas production
-# tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-# tally3.filters = [globalmesh_filter]
-# tally3.scores = ["H1-production", "H2-production", "H3-production",
-#                  "He3-production", "He4-production"]
-# tallies.append(tally3)
+tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+tally3.filters = [globalmesh_filter]
+tally3.scores = ["H1-production", "H2-production", "H3-production",
+                 "He3-production", "He4-production"]
+tallies.append(tally3)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
