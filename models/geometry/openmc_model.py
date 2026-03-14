@@ -280,7 +280,9 @@ root = [plasma.cell, sol.cell, first_wall.cell, vessel_inner_structure.cell, ves
         tf_coil_magnet.cell, tf_coil_insulation.cell, tf_coil_case.cell,
         enclosure_cell]
 
-geometry = openmc.Geometry(root=root)
+root_tf = [tf_coil_magnet.cell, tf_coil_insulation.cell, tf_coil_case.cell,
+        enclosure_cell]
+geometry = openmc.Geometry(root=root_tf)
 
 geometry.merge_surfaces = True
 
@@ -292,7 +294,7 @@ upper_right = ( 3000.0,  3000.0,  3000.0)
 
 # --- stochastic volume calculation ---
 vol_calc = openmc.VolumeCalculation(
-    domains=root,
+    domains=root_tf,
     samples=1000000,
     lower_left=lower_left,
     upper_right=upper_right,
