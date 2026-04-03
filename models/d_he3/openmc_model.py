@@ -2,7 +2,7 @@ import openmc
 import numpy as np
 from pathlib import Path
 import tokamak_radiation_environment as tre
-from fusion_fuel_concepts_explorer.sources import neutron_source
+from fusion_fuel_concepts_explorer.sources import SteadyStateSource
 from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
 
 # define materials
@@ -217,21 +217,15 @@ source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
 # source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
-calculate_neutron_emission_probabilities = neutron_source.calculate_neutron_emission_probabilities
-res_avg = calculate_neutron_emission_probabilities(
-    {"D": 0.5, "He3": 0.5},
-    ion_temperature_keV=70.0,
-    total_ion_density_cm3=1e14, # NOTE: density should be higher if we want to have the same power as dt
-    volume_profile_cm3=1.5e6,
-    reactivity_model="bosch_hale",
-    include_secondary_equilibrium=True
+res_avg = SteadyStateSource(
+    source_type="DHe3",
+    volume_m3=1.5e6 * 1.0e-6,
+    n_i=1e14 * 1.0e6,  # NOTE: density should be higher if we want to have the same power as dt
+    T_i=70.0,
 )
-prob_dict = res_avg.probabilities
-energies = np.array([
-    float(key.split(" MeV")[0]) * 1e6
-    for key in prob_dict.keys()
-])
-weights = np.array(list(prob_dict.values()))
+order = np.argsort(res_avg.neutron_energies_eV)
+energies = res_avg.neutron_energies_eV[order]
+weights = res_avg.neutron_emission_probabilities[order]
 source.energy = openmc.stats.Tabular(energies, weights, interpolation="histogram")
 
 # settings' settings

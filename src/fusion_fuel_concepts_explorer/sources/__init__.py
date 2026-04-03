@@ -1,2 +1,2 @@
-from .neutron_source import calculate_neutron_emission_probabilities
+from .source_equilibrium_solver import SteadyStateSource
 from .reactivities import *

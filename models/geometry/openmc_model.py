@@ -2,7 +2,6 @@ import openmc
 import numpy as np
 from pathlib import Path
 import tokamak_radiation_environment as tre
-from fusion_fuel_concepts_explorer.sources import neutron_source
 from fusion_fuel_concepts_explorer.geometry import component_nodes as cn
 
 # define materials

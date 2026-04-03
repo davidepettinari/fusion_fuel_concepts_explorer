@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "openmc",
     "numpy",
+    "scipy",
     "pandas",
     "tables",
     "tokamak_radiation_environment",
