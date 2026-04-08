@@ -53,6 +53,7 @@ _SOURCE_MIXES = {
 _J_PER_MEV = 1.602176634e-13
 _DEFAULT_RHO_GRID = np.linspace(0.0, 1.0, 101, dtype=float)
 _FRACTION_SUM_TOL = 1.0e-9
+_NEGATIVE_FRACTION_TOL = 1.0e-12
 
 
 def plasma_balance_ode(
@@ -338,9 +339,18 @@ def steady_state_plasma_composition(
         )
         solved_fraction = np.asarray(result.x, dtype=float)
 
-        # Reject invalid converged states before the final residual check.
-        if (not np.isfinite(solved_fraction).all()) or (np.any(solved_fraction < 0.0)):
+        # Reject invalid states, but tolerate tiny negative components from roundoff.
+        if not np.isfinite(solved_fraction).all():
+            raise RuntimeError("Steady-state composition solve produced a non-finite state")
+        min_fraction = float(np.min(solved_fraction))
+        if min_fraction < -_NEGATIVE_FRACTION_TOL:
             raise RuntimeError("Steady-state composition solve produced an invalid state")
+        if min_fraction < 0.0:
+            solved_fraction = np.clip(solved_fraction, 0.0, None)
+            fraction_sum = float(np.sum(solved_fraction))
+            if fraction_sum <= 0.0 or not math.isfinite(fraction_sum):
+                raise RuntimeError("Steady-state composition solve produced an invalid state")
+            solved_fraction = solved_fraction / fraction_sum
 
         # Check that the nonlinear solve satisfied every balance tightly.
         residual_vector = residual(solved_fraction)
@@ -416,25 +426,25 @@ class SteadyStateSource:
             if value is not None and (value <= 0.0 or math.isnan(value)):
                 raise ValueError(f"{name} must be positive or None")
 
-        self.density_fraction_input_by_species = {
+        raw_input_fractions = {
             "D": None if f_D is None else float(f_D),
             "T": None if f_T is None else float(f_T),
             "He3": None if f_He3 is None else float(f_He3),
             "He4": None if f_He4 is None else float(f_He4),
             "imp": None if f_imp is None else float(f_imp),
         }
-        explicit_fractions = any(value is not None for value in self.density_fraction_input_by_species.values())
-        self.resolved_density_fraction_by_species = (
+        explicit_fractions = any(value is not None for value in raw_input_fractions.values())
+        self.input_fractions = (
             {
-                species: 0.0 if (value := self.density_fraction_input_by_species[species]) is None else value
+                species: 0.0 if (value := raw_input_fractions[species]) is None else value
                 for species in _ALL_SOURCE_SPECIES
             }
             if explicit_fractions
             else {**_SOURCE_MIXES[self.source_type], "imp": 0.0}
         )
-        if any(value < 0.0 for value in self.resolved_density_fraction_by_species.values()):
+        if any(value < 0.0 for value in self.input_fractions.values()):
             raise ValueError("Explicit fractions must be >= 0")
-        total = sum(self.resolved_density_fraction_by_species.values())
+        total = sum(self.input_fractions.values())
         if not math.isclose(total, 1.0, rel_tol=0.0, abs_tol=_FRACTION_SUM_TOL):
             raise ValueError("Explicit density fractions must sum to 1.0")
 
@@ -492,7 +502,7 @@ class SteadyStateSource:
             self.tau_p_map[species] = base_tau if tau_value is None else tau_value
         self.species_density_m3_profile = {
             species: np.asarray(
-                self.total_density_m3_profile * self.resolved_density_fraction_by_species[species],
+                self.total_density_m3_profile * self.input_fractions[species],
                 dtype=float,
             )
             for species in _ALL_SOURCE_SPECIES
@@ -530,7 +540,7 @@ class SteadyStateSource:
                 self.total_density_m3_profile,
                 out=np.full_like(
                     self.total_density_m3_profile,
-                    self.resolved_density_fraction_by_species[species],
+                    self.input_fractions[species],
                     dtype=float,
                 ),
                 where=positive_density_mask,
@@ -609,6 +619,13 @@ class SteadyStateSource:
             if self.rho_grid_profile.size == 1
             else np.trapezoid(2.0 * self.rho_grid_profile * self.species_fraction_profile["imp"], self.rho_grid_profile)
         )
+        self.resolved_fractions = {
+            "D": self.f_D,
+            "T": self.f_T,
+            "He3": self.f_He3,
+            "He4": self.f_He4,
+            "imp": self.f_imp,
+        }
         self.total_fusion_power_W = float(sum(self.fusion_power_by_channel_W.values()))
         self.average_density_m3 = float(
             self.total_density_m3_profile[0]
@@ -623,36 +640,8 @@ class SteadyStateSource:
 
     def __repr__(self) -> str:
         lines = [f"{type(self).__name__}("]
-        display_fields = {
-            "source_type": self.source_type,
-            "volume_m3": self.volume_m3,
-            "n_i": self.n_i,
-            "T_i": self.T_i,
-            "tau_p": self.tau_p,
-            "tau_p_D": self.tau_p_D,
-            "tau_p_T": self.tau_p_T,
-            "tau_p_He3": self.tau_p_He3,
-            "tau_p_He4": self.tau_p_He4,
-            "density_fraction_input_by_species": self.density_fraction_input_by_species,
-            "resolved_density_fraction_by_species": self.resolved_density_fraction_by_species,
-            "f_imp": self.f_imp,
-            "solver_tol": self.solver_tol,
-            "solver_maxfev": self.solver_maxfev,
-        }
-        lines += [
-            f"  {name}={pformat(value, sort_dicts=False, width=100)},"
-            for name, value in display_fields.items()
-        ]
-        lines += [
-            f"  f_D={self.f_D!r},",
-            f"  f_T={self.f_T!r},",
-            f"  f_He3={self.f_He3!r},",
-            f"  f_He4={self.f_He4!r},",
-            f"  f_imp={self.f_imp!r},",
-            f"  average_density_m3={self.average_density_m3!r},",
-            f"  average_temperature_keV={self.average_temperature_keV!r},",
-            ")",
-        ]
+        lines += [f"  {name}={pformat(value, sort_dicts=False, width=100)}," for name, value in vars(self).items()]
+        lines.append(")")
         return "\n".join(lines)
 
     def plot(self) -> tuple[object, object]:
