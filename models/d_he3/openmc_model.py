@@ -42,22 +42,22 @@ fiberglass = tre.materials.fiberglass
 materials = openmc.Materials(
     [dt_plasma, tungsten, beryllium, flibe, wc, inconel, ss304, windingpack, fiberglass, ss316L])
 
-# import cross section data if necessary
-import openmc_data_downloader as odd
+# # import cross section data if necessary
+# import openmc_data_downloader as odd
 
-cross_sections_dir = (
-    Path(__file__).resolve().parents[2]
-    / "src"
-    / "fusion_fuel_concepts_explorer"
-    / "materials"
-    / "cross_sections"
-)
-materials.download_cross_section_data(
-    libraries=["ENDFB-8.0-NNDC"],
-    destination=cross_sections_dir,
-    set_OPENMC_CROSS_SECTIONS=True,
-    particles=["neutron", "photon"],
-)
+# cross_sections_dir = (
+#     Path(__file__).resolve().parents[2]
+#     / "src"
+#     / "fusion_fuel_concepts_explorer"
+#     / "materials"
+#     / "cross_sections"
+# )
+# materials.download_cross_section_data(
+#     libraries=["ENDFB-8.0-NNDC"],
+#     destination=cross_sections_dir,
+#     set_OPENMC_CROSS_SECTIONS=True,
+#     particles=["neutron", "photon"],
+# )
 
 # geometry
 
@@ -217,16 +217,26 @@ source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
 # source.energy = openmc.stats.muir(e0=14.08e6, m_rat=5, kt=20000)
+
+# Source Data
+avg_density_Dhe3 = 1.3e20
+avg_temperature_Dhe3 = 70.0
+density_peaking_DHe3 = 2.5
+temperature_peaking_DHe3 = 2
+density_profile_DHe3 = lambda rho: avg_density_Dhe3 * density_peaking_DHe3 * ((1.0 - rho**2.0) ** (density_peaking_DHe3 - 1.0))
+temperature_profile_DHe3 = lambda rho: avg_temperature_Dhe3 * temperature_peaking_DHe3 * ((1.0 - rho**2.0) ** (temperature_peaking_DHe3 - 1.0))
+
 res_avg = SteadyStateSource(
     source_type="DHe3",
-    volume_m3=1.5e6 * 1.0e-6,
-    n_i=1e14 * 1.0e6,  # NOTE: density should be higher if we want to have the same power as dt
-    T_i=70.0,
+    volume_m3=150.0,
+    n_i=density_profile_DHe3,
+    T_i=temperature_profile_DHe3,
+    tau_p=2.5,
 )
 order = np.argsort(res_avg.neutron_energies_eV)
 energies = res_avg.neutron_energies_eV[order]
 weights = res_avg.neutron_emission_probabilities[order]
-source.energy = openmc.stats.Tabular(energies, weights, interpolation="histogram")
+source.energy = openmc.stats.Discrete(energies, weights)
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
@@ -236,8 +246,8 @@ settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
 settings.particles = int(1e6)
-settings.statepoint = {'batches': [
-    5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
+# settings.statepoint = {'batches': [
+#     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
 
 # filters
