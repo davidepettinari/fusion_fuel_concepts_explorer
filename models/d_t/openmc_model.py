@@ -315,16 +315,27 @@ angle = openmc.stats.Uniform(a=np.radians(-10), b=np.radians(10))
 source.space = openmc.stats.CylindricalIndependent(
     r=radius, phi=angle, z=z_values, origin=(0., 0., 0.))
 source.angle = openmc.stats.Isotropic()
+# source.energy = openmc.stats.muir(e0=14080000.0, m_rat=5.0, kt=20000.0)
+
+# Source Data
+avg_density_DT = 1.3e20
+avg_temperature_DT = 14.0
+density_peaking_DT = 1.168
+temperature_peaking_DT = 1.83
+density_profile_DT = lambda rho: avg_density_DT * density_peaking_DT * ((1.0 - rho**2.0) ** (density_peaking_DT - 1.0))
+temperature_profile_DT = lambda rho: avg_temperature_DT * temperature_peaking_DT * ((1.0 - rho**2.0) ** (temperature_peaking_DT - 1.0))
+
 res_avg = SteadyStateSource(
     source_type="DT",
-    volume_m3=1.5e6 * 1.0e-6,
-    n_i=1e14 * 1.0e6,
-    T_i=14.0,
+    volume_m3=150.0,
+    n_i=density_profile_DT,
+    T_i=temperature_profile_DT,
+    tau_p=2.5,
 )
 order = np.argsort(res_avg.neutron_energies_eV)
 energies = res_avg.neutron_energies_eV[order]
 weights = res_avg.neutron_emission_probabilities[order]
-source.energy = openmc.stats.Tabular(energies, weights, interpolation="histogram")
+source.energy = openmc.stats.Discrete(energies, weights)
 
 # settings' settings
 settings = openmc.Settings(run_mode='fixed source')
@@ -333,9 +344,9 @@ settings.photon_transport = True
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e6)
-settings.statepoint = {'batches': [
-    5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
+settings.particles = int(1e3)
+# settings.statepoint = {'batches': [
+#     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
 
 # filters
