@@ -42,11 +42,11 @@ water.add_element("O", 1.0)
 
 new_bz_structures = openmc.Material.mix_materials(
     materials=[inconel, water],
-    fracs=[0.90, 0.10],
+    fracs=[0.10, 0.90],
     percent_type="vo"
 )
 
-new_bz_structures.name = "90% Inconel + 10% Water"
+new_bz_structures.name = "10% Inconel + 90% Water"
 new_bz_structures.add_s_alpha_beta("c_H_in_H2O")
 
 windingpack = tre.materials.windingpack
