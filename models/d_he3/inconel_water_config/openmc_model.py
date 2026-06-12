@@ -241,7 +241,7 @@ settings.photon_transport = True
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 100
-settings.particles = int(1e4)  #1e6
+settings.particles = int(1e3)  #1e6
 # settings.statepoint = {'batches': [
 #     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
 settings.output = {'tallies': False}
@@ -277,8 +277,8 @@ inner_radial_mesh_filter = openmc.MeshFilter(inner_radial_mesh)
 # Mesh for outer radial plot
 outer_radial_mesh = openmc.RegularMesh()
 nxr_out = 695*2
-outer_radial_mesh.lower_left  = (454.0, -1.0, -1.0)
-outer_radial_mesh.upper_right = (523.5, 0.0, 1.0)
+outer_radial_mesh.lower_left  = (454.0, -1.0, -10.0)
+outer_radial_mesh.upper_right = (523.5, 0.0, 10.0)
 outer_radial_mesh.dimension=[nxr_out, nyr_in, nzr_in]
 outer_radial_mesh_filter = openmc.MeshFilter(outer_radial_mesh)
 
