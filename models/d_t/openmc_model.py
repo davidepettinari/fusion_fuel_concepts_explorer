@@ -367,6 +367,24 @@ mesh.lower_left = [40, -120, -500]
 mesh.upper_right = [680, 120, 500]
 globalmesh_filter = openmc.MeshFilter(mesh)
 
+# Mesh for inner radial plot
+inner_radial_mesh = openmc.RegularMesh()
+nxr_in = 695*2
+nyr_in = 1
+nzr_in = 1
+inner_radial_mesh.lower_left  = (139.5, -1.0, -10.0)
+inner_radial_mesh.upper_right = (209.0, 0.0, 10.0)
+inner_radial_mesh.dimension=[nxr_in, nyr_in, nzr_in]
+inner_radial_mesh_filter = openmc.MeshFilter(inner_radial_mesh)
+
+# Mesh for outer radial plot
+outer_radial_mesh = openmc.RegularMesh()
+nxr_out = 695*2
+outer_radial_mesh.lower_left  = (454.0, -1.0, -10.0)
+outer_radial_mesh.upper_right = (523.5, 0.0, 10.0)
+outer_radial_mesh.dimension=[nxr_out, nyr_in, nzr_in]
+outer_radial_mesh_filter = openmc.MeshFilter(outer_radial_mesh)
+
 # cell filter
 channel_filter = openmc.CellFilter(root[4])
 breeder_filter = openmc.CellFilter(root[7])
@@ -486,6 +504,29 @@ spectra_tf_coil_case_tally = openmc.Tally(name='neutron_spectra_tf_coil_case')
 spectra_tf_coil_case_tally.filters = [tf_coil_case_filter, neutron_filter, energy_filter]
 spectra_tf_coil_case_tally.scores = ['flux']
 tallies.append(spectra_tf_coil_case_tally)
+
+# RADIAL PROFILES
+# Neutron flux
+i_r_n_flux_tally = openmc.Tally(name="inner_radial_neutron_flux")
+i_r_n_flux_tally.scores = ["flux"]
+i_r_n_flux_tally.filters = [inner_radial_mesh_filter, neutron_filter]
+tallies.append(i_r_n_flux_tally)
+
+o_r_n_flux_tally = openmc.Tally(name="outer_radial_neutron_flux")
+o_r_n_flux_tally.scores = ["flux"]
+o_r_n_flux_tally.filters = [outer_radial_mesh_filter, neutron_filter]
+tallies.append(o_r_n_flux_tally)
+
+# q vol on mesh
+i_r_q_vol_tally = openmc.Tally(name="i_r_q_vol")
+i_r_q_vol_tally.scores = ["heating-local"]
+i_r_q_vol_tally.filters = [inner_radial_mesh_filter]
+tallies.append(i_r_q_vol_tally)
+
+o_r_q_vol_tally = openmc.Tally(name="o_r_q_vol")
+o_r_q_vol_tally.scores = ["heating-local"]
+o_r_q_vol_tally.filters = [outer_radial_mesh_filter]
+tallies.append(o_r_q_vol_tally)
 
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)
