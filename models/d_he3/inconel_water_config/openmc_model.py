@@ -402,6 +402,7 @@ spectra_tf_coil_case_tally.filters = [tf_coil_case_filter, neutron_filter, energ
 spectra_tf_coil_case_tally.scores = ['flux']
 tallies.append(spectra_tf_coil_case_tally)
 
+# RADIAL PROFILES
 # Neutron flux
 i_r_n_flux_tally = openmc.Tally(name="inner_radial_neutron_flux")
 i_r_n_flux_tally.scores = ["flux"]
