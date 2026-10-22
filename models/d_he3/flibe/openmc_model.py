@@ -244,10 +244,10 @@ settings.photon_transport = True
 # settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
-settings.batches = 500
+settings.batches = 1000
 settings.particles = int(1e4)
-# settings.statepoint = {'batches': [
-#     5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]}
+settings.statepoint = {'batches': [
+    100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]}
 settings.output = {'tallies': False}
 
 # filters
