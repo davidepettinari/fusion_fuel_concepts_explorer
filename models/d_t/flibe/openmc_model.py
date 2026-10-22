@@ -304,7 +304,7 @@ geometry.merge_surfaces = True
 # settings
 
 # weight windows from attila4mc
-ww = openmc.wwinp_to_wws("weight_windows.cadis.wwinp")
+ww = openmc.wwinp_to_wws("../weight_windows.cadis.wwinp")
 
 # source definition
 source = openmc.IndependentSource()
