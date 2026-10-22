@@ -36,22 +36,36 @@ b4c = tre.materials.b4c
 wc = tre.materials.wc
 
 borated_water = openmc.model.borated_water(
-    boron_ppm=1000.0,       
-    temperature=293.0,      
-    pressure=0.1013,        
+    boron_ppm=1000.0,
+    temperature=293.0,
+    pressure=0.1013,
     temp_unit="K",
     press_unit="MPa",
     name="Borated water",
 )
 
-materials = openmc.Materials([borated_water])
-new_bz_structures = openmc.Material.mix_materials(
-    materials=[inconel, borated_water],
-    fracs=[0.10, 0.90],
-    percent_type="vo"
+water_for_mix = openmc.Material(name="Borated water without SAB")
+
+for nuclide in borated_water.nuclides:
+    water_for_mix.add_nuclide(
+        nuclide.name,
+        nuclide.percent,
+        nuclide.percent_type,
+    )
+
+water_for_mix.set_density(
+    "g/cm3",
+    borated_water.get_mass_density(),
 )
 
-new_bz_structures.name = "10% Inconel + 90% Water"
+new_bz_structures = openmc.Material.mix_materials(
+    materials=[inconel, water_for_mix],
+    fracs=[0.10, 0.90],
+    percent_type="vo",
+    name="10% Inconel + 90% Borated water",
+    temperature=293.0,
+)
+
 new_bz_structures.add_s_alpha_beta("c_H_in_H2O")
 
 windingpack = tre.materials.windingpack
