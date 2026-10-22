@@ -43,7 +43,6 @@ borated_water = openmc.model.borated_water(
     press_unit="MPa",
     name="Borated water",
 )
-borated_water.add_s_alpha_beta("c_H_in_H2O")
 
 materials = openmc.Materials([borated_water])
 new_bz_structures = openmc.Material.mix_materials(
@@ -53,6 +52,7 @@ new_bz_structures = openmc.Material.mix_materials(
 )
 
 new_bz_structures.name = "10% Inconel + 90% Water"
+new_bz_structures.add_s_alpha_beta("c_H_in_H2O")
 
 windingpack = tre.materials.windingpack
 fiberglass = tre.materials.fiberglass
