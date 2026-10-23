@@ -212,3 +212,4 @@ tokamak_radiation_environment-master/
 
 # Risultati OpenMC
 *.h5
+*.vtk
