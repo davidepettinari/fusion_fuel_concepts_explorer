@@ -260,7 +260,7 @@ settings.photon_transport = True
 settings.weight_windows = ww
 settings.source = source
 settings.batches = 1000
-settings.particles = int(1e4)  #1e6
+settings.particles = int(1e5)  #1e6
 settings.statepoint = {'batches': [
      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]}
 settings.output = {'tallies': False}
