@@ -1059,7 +1059,7 @@
   <settings>
     <run_mode>fixed source</run_mode>
     <particles>10000</particles>
-    <batches>500</batches>
+    <batches>1000</batches>
     <source particle="neutron" strength="1.0" type="independent">
       <space origin="0.0 0.0 0.0" type="cylindrical">
         <r type="discrete">
@@ -1078,6 +1078,9 @@
     <output>
       <tallies>false</tallies>
     </output>
+    <state_point>
+      <batches>100 200 300 400 500 600 700 800 900 1000</batches>
+    </state_point>
     <photon_transport>true</photon_transport>
     <weight_windows id="1">
       <mesh>1</mesh>
