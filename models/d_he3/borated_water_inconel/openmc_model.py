@@ -259,10 +259,10 @@ settings.photon_transport = True
 # settings.electron_treatment = 'ttb'
 settings.weight_windows = ww
 settings.source = source
-settings.batches = 100
-settings.particles = int(1e6)  #1e6
+settings.batches = 10
+settings.particles = int(1e7)  #1e6
 settings.statepoint = {'batches': [
-     50, 100]}
+     5, 10]}
 settings.output = {'tallies': False}
 
 # filters
@@ -314,24 +314,24 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 
 # tallies
 tallies = openmc.Tallies()
-# mesh tally - nflux
-tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-tally1.filters = [neutron_filter, globalmesh_filter]
-tally1.scores = ["flux"]
-tallies.append(tally1)
+# # # mesh tally - nflux
+# # tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+# # tally1.filters = [neutron_filter, globalmesh_filter]
+# # tally1.scores = ["flux"]
+# # tallies.append(tally1)
 
-# mesh tally - heating
-tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
-tally2.filters = [particle_filter, globalmesh_filter]
-tally2.scores = ["heating"]
-tallies.append(tally2)
+# # # mesh tally - heating
+# # tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
+# # tally2.filters = [particle_filter, globalmesh_filter]
+# # tally2.scores = ["heating"]
+# # tallies.append(tally2)
 
-# mesh tally - gas production
-tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-tally3.filters = [globalmesh_filter]
-tally3.scores = ["H1-production", "H2-production", "H3-production",
-                 "He3-production", "He4-production"]
-tallies.append(tally3)
+# # # mesh tally - gas production
+# # tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+# # tally3.filters = [globalmesh_filter]
+# # tally3.scores = ["H1-production", "H2-production", "H3-production",
+# #                  "He3-production", "He4-production"]
+# # tallies.append(tally3)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
