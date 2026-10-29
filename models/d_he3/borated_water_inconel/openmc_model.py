@@ -36,8 +36,8 @@ b4c = tre.materials.b4c
 wc = tre.materials.wc
 
 borated_water = openmc.model.borated_water(
-    boron_ppm=1000.0,
-    temperature=293.0,
+    boron_ppm=20000.0,
+    temperature=343.15,
     pressure=0.1013,
     temp_unit="K",
     press_unit="MPa",
@@ -314,24 +314,24 @@ energy_filter = openmc.EnergyFilter(tripoli315)
 
 # tallies
 tallies = openmc.Tallies()
-# # # mesh tally - nflux
-# # tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
-# # tally1.filters = [neutron_filter, globalmesh_filter]
-# # tally1.scores = ["flux"]
-# # tallies.append(tally1)
+# mesh tally - nflux
+tally1 = openmc.Tally(tally_id=1, name="nflux_mesh")
+tally1.filters = [neutron_filter, globalmesh_filter]
+tally1.scores = ["flux"]
+tallies.append(tally1)
 
-# # # mesh tally - heating
-# # tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
-# # tally2.filters = [particle_filter, globalmesh_filter]
-# # tally2.scores = ["heating"]
-# # tallies.append(tally2)
+# mesh tally - heating
+tally2 = openmc.Tally(tally_id=2, name="heating_mesh")
+tally2.filters = [particle_filter, globalmesh_filter]
+tally2.scores = ["heating"]
+tallies.append(tally2)
 
-# # # mesh tally - gas production
-# # tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
-# # tally3.filters = [globalmesh_filter]
-# # tally3.scores = ["H1-production", "H2-production", "H3-production",
-# #                  "He3-production", "He4-production"]
-# # tallies.append(tally3)
+# mesh tally - gas production
+tally3 = openmc.Tally(tally_id=3, name="gas_pruduction_mesh")
+tally3.filters = [globalmesh_filter]
+tally3.scores = ["H1-production", "H2-production", "H3-production",
+                 "He3-production", "He4-production"]
+tallies.append(tally3)
 
 # tbr
 tbr_total_tally = openmc.Tally(name="TBR_total")
