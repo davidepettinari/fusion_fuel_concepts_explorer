@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+
+type: software
+
+authors:
+  - family-names: "Pettinari"
+    given-names: "Davide"
+
+title: "Fusion Fuel Concepts Explorer (FFCE)"
+version: 0.1.0
+doi: 10.5281/zenodo.24106293
+date-released: 2026-11-10
+
+url: "https://github.com/davidepettinari/fusion_fuel_concepts_explorer"
+repository-code: "https://github.com/davidepettinari/fusion_fuel_concepts_explorer"
