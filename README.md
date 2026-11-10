@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24106293.svg)](https://doi.org/10.5281/zenodo.24106293)
+
 # Fusion Fuel Concepts Explorer (FFCE)
 
 Fusion Fuel Concepts Explorer is a Python project for comparing the radiation
