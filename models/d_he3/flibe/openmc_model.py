@@ -432,4 +432,8 @@ tallies.append(o_r_q_vol_tally)
 model = openmc.Model(materials=materials, geometry=geometry,
                      settings=settings, tallies=tallies)
 
-model.run(threads=12, geometry_debug=False)
+# Create results directory if it does not exist
+results_dir = Path(__file__).resolve().parent / "results"
+results_dir.mkdir(parents=True, exist_ok=True)
+
+model.run(threads=12, geometry_debug=False, cwd=results_dir)
